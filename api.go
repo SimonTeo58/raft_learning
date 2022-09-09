@@ -80,11 +80,11 @@ type Raft struct {
 	// different versions of the library. See comments in config.go for more
 	// details.
 	protocolVersion ProtocolVersion
-
+	//  异步提交logEntry
 	// applyCh is used to async send logs to the main thread to
 	// be committed and applied to the FSM.
 	applyCh chan *logFuture
-
+	//conf存储raft的配置数据，所有raft结构的数据都需要config()helper进行检查
 	// conf stores the current configuration to use. This is the most recent one
 	// provided. All reads of config values should use the config() helper method
 	// to read this safely.
@@ -93,11 +93,12 @@ type Raft struct {
 	// confReloadMu ensures that only one thread can reload config at once since
 	// we need to read-modify-write the atomic. It is NOT necessary to hold this
 	// for any other operation e.g. reading config using config().
+	//原子性保证config的读，修改，写
 	confReloadMu sync.Mutex
-
+	// 上层状态机
 	// FSM is the client state machine to apply commands to
 	fsm FSM
-
+	//告诉状态机，当前节点状态改变了，follwer,candidate,leader
 	// fsmMutateCh is used to send state-changing updates to the FSM. This
 	// receives pointers to commitTuple structures when applying logs or
 	// pointers to restoreFuture structures when restoring a snapshot. We
@@ -106,18 +107,20 @@ type Raft struct {
 	// take a user snapshot on the leader, otherwise we might restore the
 	// snapshot and apply old logs to it that were in the pipe.
 	fsmMutateCh chan interface{}
-
+	//触发新的snapshot
 	// fsmSnapshotCh is used to trigger a new snapshot being taken
 	fsmSnapshotCh chan *reqSnapshotFuture
 
+	//检查leader的heartbeat
 	// lastContact is the last time we had contact from the
 	// leader node. This can be used to gauge staleness.
 	lastContact     time.Time
 	lastContactLock sync.RWMutex
-
+	//leader地址(string)
 	// leaderAddr is the current cluster leader Address
 	leaderAddr ServerAddress
 	// LeaderID is the current cluster leader ID
+	// leaderID(string)
 	leaderID   ServerID
 	leaderLock sync.RWMutex
 
@@ -131,6 +134,7 @@ type Raft struct {
 	// candidate because the leader tries to transfer leadership. This flag is
 	// used in RequestVoteRequest to express that a leadership transfer is going
 	// on.
+	// leader降级
 	candidateFromLeadershipTransfer bool
 
 	// Stores our local server ID, used to avoid sending RPCs to ourself
@@ -142,12 +146,13 @@ type Raft struct {
 	// Used for our logging
 	logger hclog.Logger
 
+	//raft更logEntry的接口
 	// LogStore provides durable storage for logs
 	logs LogStore
-
+	// 支持居群成员变更
 	// Used to request the leader to make configuration changes.
 	configurationChangeCh chan *configurationChangeFuture
-
+	//TBC 更成员变更有关系
 	// Tracks the latest configuration and latest committed configuration from
 	// the log/snapshot.
 	configurations configurations
@@ -157,57 +162,59 @@ type Raft struct {
 	latestConfiguration atomic.Value
 
 	// RPC chan comes from the transport layer
+	// 双向channel
 	rpcCh <-chan RPC
-
+	//优雅关停raft
 	// Shutdown channel to exit, protected to prevent concurrent exits
 	shutdown     bool
 	shutdownCh   chan struct{}
 	shutdownLock sync.Mutex
-
+	// 存储snapshot
 	// snapshots is used to store and retrieve snapshots
 	snapshots SnapshotStore
-
+	//用户-triggered snapshots
 	// userSnapshotCh is used for user-triggered snapshots
 	userSnapshotCh chan *userSnapshotFuture
 
 	// userRestoreCh is used for user-triggered restores of external
 	// snapshots
 	userRestoreCh chan *userRestoreFuture
-
+	//为raftState字段提供持久化存储
 	// stable is a StableStore implementation for durable state
 	// It provides stable storage for many fields in raftState
 	stable StableStore
-
+	// 传输层
 	// The transport layer we use
 	trans Transport
-
+	// 验证我们还是不是leader
 	// verifyCh is used to async send verify futures to the main thread
 	// to verify we are still the leader
 	verifyCh chan *verifyFuture
-
+	// 从主循环外拿到集群的configuration
 	// configurationsCh is used to get the configuration data safely from
 	// outside of the main thread.
 	configurationsCh chan *configurationsFuture
-
+	// 引导程序？不知道干嘛额
 	// bootstrapCh is used to attempt an initial bootstrap from outside of
 	// the main thread.
 	bootstrapCh chan *bootstrapFuture
-
+	//不知道干嘛的
 	// List of observers and the mutex that protects them. The observers list
 	// is indexed by an artificial ID which is used for deregistration.
 	observersLock sync.RWMutex
 	observers     map[uint64]*Observer
-
+	// 禅让
 	// leadershipTransferCh is used to start a leadership transfer from outside of
 	// the main thread.
 	leadershipTransferCh chan *leadershipTransferFuture
-
+	//告诉leader config已经改变
 	// leaderNotifyCh is used to tell leader that config has changed
 	leaderNotifyCh chan struct{}
+	//告诉follower config已经改变
 
 	// followerNotifyCh is used to tell followers that config has changed
 	followerNotifyCh chan struct{}
-
+	// 测绘main routine的饱和度
 	// mainThreadSaturation measures the saturation of the main raft goroutine.
 	mainThreadSaturation *saturationMetric
 }

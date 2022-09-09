@@ -223,6 +223,7 @@ type Config struct {
 	skipStartup bool
 }
 
+// 创建hclog.Logger实例，默认是os.Stderr级别
 func (conf *Config) getOrCreateLogger() hclog.Logger {
 	if conf.Logger != nil {
 		return conf.Logger
@@ -238,6 +239,7 @@ func (conf *Config) getOrCreateLogger() hclog.Logger {
 	})
 }
 
+// 在raft运行时可以重新配置部分raft配置，但是这个reload动作很危险
 // ReloadableConfig is the subset of Config that may be reconfigured during
 // runtime using raft.ReloadConfig. We choose to duplicate fields over embedding
 // or accepting a Config but only using specific fields to keep the API clear.
@@ -270,6 +272,7 @@ type ReloadableConfig struct {
 	ElectionTimeout time.Duration
 }
 
+//将要ReloadableConfig复制一份给Config
 // apply sets the reloadable fields on the passed Config to the values in
 // `ReloadableConfig`. It returns a copy of Config with the fields from this
 // ReloadableConfig set.
@@ -282,6 +285,7 @@ func (rc *ReloadableConfig) apply(to Config) Config {
 	return to
 }
 
+//从Config 复制给ReloadableConfig
 // fromConfig copies the reloadable fields from the passed Config.
 func (rc *ReloadableConfig) fromConfig(from Config) {
 	rc.TrailingLogs = from.TrailingLogs
@@ -291,6 +295,7 @@ func (rc *ReloadableConfig) fromConfig(from Config) {
 	rc.ElectionTimeout = from.ElectionTimeout
 }
 
+// 设置弄人配置
 // DefaultConfig returns a Config with usable defaults.
 func DefaultConfig() *Config {
 	return &Config{
@@ -308,6 +313,7 @@ func DefaultConfig() *Config {
 	}
 }
 
+//检查Config配置，这些配置必不可少，所以少一个就报错
 // ValidateConfig is used to validate a sane configuration
 func ValidateConfig(config *Config) error {
 	// We don't actually support running as 0 in the library any more, but

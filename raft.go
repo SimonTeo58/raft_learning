@@ -205,7 +205,7 @@ func (r *Raft) runFollower() {
 
 		case <-r.followerNotifyCh:
 			heartbeatTimer = time.After(0)
-
+		//follower 检查heartbeat
 		case <-heartbeatTimer:
 			r.mainThreadSaturation.working()
 			// Restart the heartbeat timer

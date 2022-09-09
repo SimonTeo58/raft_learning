@@ -1,0 +1,1 @@
+{"buildTargets":["cov","dep-linter","deps","fuzz","integ","lint","test"],"launchTargets":[],"customConfigurationProvider":{"workspaceBrowse":{"browsePath":[],"compilerArgs":[]},"fileIndex":[]}}

@@ -219,6 +219,8 @@ type Raft struct {
 	mainThreadSaturation *saturationMetric
 }
 
+// 通过已知的成员进行初始化，使整个集群中有相同的集群配置,不需要
+// bootstrap Nonvoter and Staging servers,Configuration需要自己去准备然后传给集群
 // BootstrapCluster initializes a server's storage with the given cluster
 // configuration. This should only be called at the beginning of time for the
 // cluster with an identical configuration listing all Voter servers. There is
@@ -248,6 +250,7 @@ func BootstrapCluster(conf *Config, logs LogStore, stable StableStore,
 	if err != nil {
 		return fmt.Errorf("failed to check for existing state: %v", err)
 	}
+	// 已经有状态了就不能进行boot
 	if hasState {
 		return ErrCantBootstrap
 	}

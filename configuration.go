@@ -177,6 +177,7 @@ func hasVote(configuration Configuration, id ServerID) bool {
 	return false
 }
 
+// 检查集群server的配置
 // checkConfiguration tests a cluster membership configuration for common
 // errors.
 func checkConfiguration(configuration Configuration) error {

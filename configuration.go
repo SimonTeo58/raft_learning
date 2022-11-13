@@ -177,7 +177,18 @@ func hasVote(configuration Configuration, id ServerID) bool {
 	return false
 }
 
-// 检查集群server的配置
+//检查集群server的配置
+// inConfiguration returns true if the server identified by 'id' is in in the
+// provided Configuration.
+func inConfiguration(configuration Configuration, id ServerID) bool {
+	for _, server := range configuration.Servers {
+		if server.ID == id {
+			return true
+		}
+	}
+	return false
+}
+
 // checkConfiguration tests a cluster membership configuration for common
 // errors.
 func checkConfiguration(configuration Configuration) error {
